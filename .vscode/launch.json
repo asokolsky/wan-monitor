@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: test all",
+            "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "module": "unittest"
+            "program": "${file}",
+            "console": "integratedTerminal"
         }
     ]
 }
