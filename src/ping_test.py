@@ -18,7 +18,7 @@ class ping_test( unittest.TestCase ):
     function ping test cases
     '''
 
-    def test_good_ping( s ):
+    def test_good_ping( s ) -> None:
 
         res = ping( badip )
         log.debug( 'ping( %s ) => %s', badip, res )

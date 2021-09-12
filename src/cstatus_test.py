@@ -16,7 +16,7 @@ class ConnectivityStatus_test( unittest.TestCase ):
     class ConnectivityStatus test cases
     '''
 
-    def test_connectivity_status(s):
+    def test_connectivity_status(s) -> None:
         stat = ConnectivityStatus( lan_gw, wan_gw, modem_ip )
         stat.update()
         log.debug( 'stat:%s', stat )

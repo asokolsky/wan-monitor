@@ -1,7 +1,7 @@
 #
 import subprocess
 
-def ping( hostname:str, timeout=0.1 ) -> str:
+def ping( hostname:str, timeout:float=0.1 ) -> str:
     '''
     Ping hostname for upto timeout secs.
     Returns: rtt, e.g. '7.445 ms' or '' in case of failure

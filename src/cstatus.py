@@ -45,6 +45,7 @@ class ConnectivityStatus( JsonSerializable ):
     wan_timeout_down = timedelta( seconds=9 )
 
     def __init__( s, lan_gw:str='', wan_gw:str='', modem_ip:str='', path:str='' ):
+        super().__init__()
         s.lan_gw = lan_gw
         s.wan_gw = wan_gw
         s.modem_ip = modem_ip
@@ -67,7 +68,7 @@ class ConnectivityStatus( JsonSerializable ):
         return s.lan_gw != '' # and s.wan_gw
 
 
-    def update( s ):
+    def update( s ) -> None:
         '''
         Do actual communication with the world
         '''
@@ -126,7 +127,7 @@ class ConnectivityStatus( JsonSerializable ):
 
         return old.state, s.state, n, delta
 
-    def get_from_file( s, path ) -> str:
+    def get_from_file( s, path:str ) -> str:
         with open( path ) as fp:
             for line in fp:
                 return line.strip()

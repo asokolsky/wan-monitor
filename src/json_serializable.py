@@ -11,7 +11,7 @@ class JsonSerializable:
     Parent for an object that should be serialized to/from JSON
     TODO: save class name
     '''
-    def __init__( s ):
+    def __init__( s ) -> None:
         s.class_name = type( s ).__name__
         return
 
@@ -54,7 +54,7 @@ class JsonSerializable:
             s.__setattr__(k,v)
         return
 
-    def __repr__( s ):
+    def __repr__( s ) -> str:
         return s.dumps()
 
     def to_file( s, path:str ) -> bool:

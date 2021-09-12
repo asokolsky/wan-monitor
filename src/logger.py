@@ -15,7 +15,7 @@ log_level = logging.INFO
 
 log_file_path = '/tmp/modem-monitor.log'
 
-def create_logger( log_file_path:str, log_level ) -> logging.Logger:
+def create_logger( log_file_path:str, log_level:int ) -> logging.Logger:
     '''
     Get the logger object to use for logging.
     '''

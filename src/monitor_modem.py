@@ -20,28 +20,28 @@ from typing import Dict, List, Optional
 from logger import log
 from cstatus import ConnectivityState, ConnectivityStatus
 
-def on_wan_up( now:datetime, downtime:timedelta ):
+def on_wan_up( now:datetime, downtime:timedelta ) -> None:
     '''
     Wan is available.  Again!
     '''
     log.info( 'on_wan_upup: %s, %s', now, downtime )
     return
 
-def on_wan_sick( now:datetime, uptime:timedelta ):
+def on_wan_sick( now:datetime, uptime:timedelta ) -> None:
     '''
     Wan goes sick.  It can get better soon.  Or not.
     '''
     log.info( 'on_wan_sick: %s, %s', now, uptime )
     return
 
-def on_wan_down( now:datetime, sicktime:timedelta ):
+def on_wan_down( now:datetime, sicktime:timedelta ) -> None:
     '''
     Wan goes down!  Do something about it!
     '''
     log.info( 'on_wan_down: %s, %s', now, sicktime )
     return
 
-def monitor_modem_tick():
+def monitor_modem_tick() -> None:
     '''
     This can be called from a loop or cron
     '''

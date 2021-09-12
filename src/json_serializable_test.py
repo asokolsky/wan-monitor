@@ -37,7 +37,7 @@ class JsonSerializable_test( unittest.TestCase ):
     TODO: test file ops
     '''
 
-    def test_dumps_eq_loads( s ):
+    def test_dumps_eq_loads( s ) -> None:
         rudy = Dog( 'Rudy' )
         dogs = rudy.dumps()
 
