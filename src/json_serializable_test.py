@@ -56,6 +56,19 @@ class JsonSerializable_test( unittest.TestCase ):
             '{"class_name":"Person","name":"Alex","pets":['+dogs+'],"sound":"blah","species":"homo"}' )
         return
 
+    def test_loads_fail( s ) -> None:
+        '''
+        test loads from improperly formatted string
+        '''
+        return
+
+    def test_load_fail( s ) -> None:
+        '''
+        test load from non-existent file, file with improperly formatted content
+        '''
+        return
+
+
 
 if __name__ == '__main__':
     unittest.main()

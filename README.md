@@ -27,7 +27,7 @@ state transition to up, thus skipping sick.
 
 ### WAN State Transition Callbacks
 
-Wehn WAN connectivity state changes, an appropriate on_wan_XXX callback is
+When WAN connectivity state changes, an appropriate on_wan_XXX callback is
 called.
 
 on_wan_down will powercycle the modem.
