@@ -1,7 +1,6 @@
 #
 #
 #
-
 import json
 import pickle
 from typing import Any, TextIO
@@ -9,9 +8,10 @@ from typing import Any, TextIO
 class JsonSerializable:
     '''
     Parent for an object that should be serialized to/from JSON
-    TODO: save class name
     '''
+
     def __init__( s ) -> None:
+        # at the very least we will be serializing the class name
         s.class_name = type( s ).__name__
         return
 
@@ -19,6 +19,7 @@ class JsonSerializable:
         '''
         Serialize object into a string
         '''
+        # TODO: catch exception raised by bad json?
         return json.dumps(
             s,
             default=lambda o: o.__dict__, sort_keys=True,
@@ -30,6 +31,7 @@ class JsonSerializable:
         '''
         Serialize object into a file
         '''
+        # TODO: catch exception raised by bad json?
         json.dump(
             s, f, default=lambda o: o.__dict__, sort_keys=True,
             separators=(',', ':')
@@ -39,21 +41,37 @@ class JsonSerializable:
 
     def loads( s, datas:str ) -> bool:
         '''
-        Load object values from a string
+        Load object values from a string.
         '''
-        data = json.loads( datas )
+        try:
+            data = json.loads( datas )
+        except ValueError:  # includes simplejson.decoder.JSONDecodeError
+            return False
+
+        # verify class name is right
+        if data.get( 'class_name', '') != s.class_name:
+            return False
+
         for k,v in data.items():
             s.__setattr__(k,v)
         return True
 
-    def load( s, f:TextIO ) -> None:
+    def load( s, f:TextIO ) -> bool:
         '''
         Load object values from a file
         '''
-        data = json.load( f )
+        try:
+            data = json.load( f )
+        except ValueError:  # includes simplejson.decoder.JSONDecodeError
+            return False
+
+        # verify class name is right
+        if data.get( 'class_name', '') != s.class_name:
+            return False
+
         for k,v in data.items():
             s.__setattr__(k,v)
-        return
+        return True
 
     def __repr__( s ) -> str:
         return s.dumps()
@@ -69,6 +87,7 @@ class JsonSerializable:
                 res = True
         except FileNotFoundError:
             pass
+        # TODO: catch exception raised by bad json
 
         return res
 
