@@ -1,5 +1,5 @@
 #
-# 
+#
 #
 
 from typing import List
@@ -31,7 +31,7 @@ class ping_test( unittest.TestCase ):
         res = ping( wan_gw )
         log.debug( 'ping( %s ) => %s', wan_gw, res )
         s.assertTrue( res, 'Failed to ping ' + wan_gw )
-                
+
         return
 
 if __name__ == '__main__':

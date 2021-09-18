@@ -1,10 +1,10 @@
 #
-# 
+#
 #
 
 import json
 import pickle
-from typing import Any
+from typing import Any, TextIO
 
 class JsonSerializable:
     '''
@@ -23,18 +23,19 @@ class JsonSerializable:
             s,
             default=lambda o: o.__dict__, sort_keys=True,
             separators=(',', ':')
-            #indent=4 
+            #indent=4
         )
 
-    def dump( s, f ):
+    def dump( s, f:TextIO ) -> None:
         '''
         Serialize object into a file
         '''
-        return json.dump(
+        json.dump(
             s, f, default=lambda o: o.__dict__, sort_keys=True,
             separators=(',', ':')
             #indent=4
         )
+        return
 
     def loads( s, datas:str ) -> bool:
         '''
@@ -45,7 +46,7 @@ class JsonSerializable:
             s.__setattr__(k,v)
         return True
 
-    def load( s, f ) -> None:
+    def load( s, f:TextIO ) -> None:
         '''
         Load object values from a file
         '''

@@ -1,6 +1,5 @@
 #
 
-from typing import List
 import unittest
 
 from cstatus import ConnectivityStatus
@@ -35,7 +34,7 @@ class ConnectivityStatus_test( unittest.TestCase ):
         assert stat == stat1
 
         stat1.update()
-        log.debug( 'stat1:%s', stat1 )        
+        log.debug( 'stat1:%s', stat1 )
 
         return
 

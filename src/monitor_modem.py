@@ -38,7 +38,7 @@ def on_wan_down( now:datetime, sicktime:timedelta ) -> None:
     '''
     Wan goes down!  Do something about it!
     '''
-    log.info( 'on_wan_down: %s, %s', now, sicktime )
+    log.warning( 'on_wan_down: %s, %s', now, sicktime )
     return
 
 def monitor_modem_tick() -> None:
@@ -47,7 +47,7 @@ def monitor_modem_tick() -> None:
     '''
     old = ConnectivityStatus( path=modem_status_path )
     now = ConnectivityStatus( lan_gw, wan_gw, modem_ip )
-        
+
     if not old.loaded():
         now.to_file( modem_status_path )
         return
@@ -82,6 +82,7 @@ def monitor_modem_tick() -> None:
     return
 
 def test_loop() -> None:
+    log.info( 'monitoring wan_gw %s', wan_gw )
     try:
         while True:
             monitor_modem_tick()

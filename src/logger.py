@@ -7,7 +7,8 @@ import logging
 import os
 from sys import stderr
 
-msg_format = "%(asctime)s.%(msecs)03d %(levelname)s %(threadName)s %(filename)s:%(lineno)s %(message)s"
+#msg_format = "%(asctime)s.%(msecs)03d %(levelname)s %(threadName)s %(filename)s:%(lineno)s %(message)s"
+msg_format = "%(asctime)s.%(msecs)03d %(levelname)s %(message)s"
 date_format = '%m%d.%H%M%S'
 
 #log_level = logging.DEBUG

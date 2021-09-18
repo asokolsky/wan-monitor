@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from json_serializable import JsonSerializable
 from ping import ping
-from typing import Optional, Tuple, Union
+from typing import Any, Tuple, Union
 
 from logger import log
 
@@ -23,11 +23,11 @@ class ConnectivityState( str, Enum ):
     def is_valid( cls, st: Union[ str, 'ConnectivityState' ] ) -> bool:
         return st in cls._value2member_map_
 
-    def __repr__( s ):
+    def __repr__( s ) -> str:
         'Enable serialization as a string'
         return repr( s.value )
 
-    def __str__( s ):
+    def __str__( s ) -> Any:
         'Enable serialization as a string'
         return s.value
 
@@ -101,7 +101,7 @@ class ConnectivityStatus( JsonSerializable ):
             else:
                 s.last_state_change = str(n)
                 log.debug( 'WAN going up on %s', s.last_state_change )
-        
+
         elif old.wan_gw_rtt:
             s.state = ConnectivityState.sick
             s.last_state_change = str(n)
@@ -114,7 +114,7 @@ class ConnectivityStatus( JsonSerializable ):
         elif n < o + s.wan_timeout_down:
             s.state = ConnectivityState.sick
             log.info( 'WAN still sick since %s', s.last_state_change )
-        
+
         else:
             s.state = ConnectivityState.down
             s.last_state_change = str(n)
