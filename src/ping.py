@@ -7,7 +7,7 @@ def ping( hostname:str, timeout:float=0.1 ) -> str:
     Returns: rtt, e.g. '7.445 ms' or '' in case of failure
     '''
     try:
-        cmdv = [ 'ping', '-q', '-c', '1', hostname ]
+        cmdv = [ '/usr/bin/ping', '-q', '-c', '1', hostname ]
         res = subprocess.run( cmdv, timeout=timeout, text=True, capture_output=True )
         if res.returncode != 0:
             return ''

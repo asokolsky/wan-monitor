@@ -10,7 +10,11 @@ My cable modem occasionally looses connection to ISP. So, the plan is:
 ## Design
 
 Modem status is represented as JSON and is saved into a file.
-Periodically get new status, compare with the old one, act on it.
+Periodically:
+
+* get WAN connectivity status by pinging WAN gateway;
+* compare current status with the old one;
+* act on changes.
 
 ### WAN Connection States
 
@@ -151,5 +155,5 @@ alex@latitude7490:~/Projects/wan-monitor/src$ python3 monitor_modem.py
 
 ## Status
 
-This is a work in progress.  Monitoring part is pretty much done - see above.
+This is a work in progress.  Monitoring part is pretty much done.
 Powercycling - not started.
