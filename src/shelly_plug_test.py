@@ -1,153 +1,201 @@
 #
 #
 #
-
-from typing import List
+import json
+# from typing import List
 import unittest
 
 from shelly_plug import ShellyPlug
+from logger import log
 
 
-class ShellyPlug_test( unittest.TestCase ):
+class ShellyPlug_test(unittest.TestCase):
     '''
     class ShellyPlug test cases
+
+    to run all these:
+    `python3 -m unittest shelly_plug_test.py`
+
+    to run just one:
+    `python3 -m unittest shelly_plug_test.ShellyPlug_test.test_nonexistent_plug`
     '''
 
-    def test_nonexistent_plug( s ) -> None:
+    # IP Address of your shelly plug
+    ip = '192.168.10.190'
+
+    def test_nonexistent_plug(s) -> None:
+        '''
+        Test behavior of misconfigured object
+        '''
+        log.info('test_nonexistent_plug')
 
         badIP = '192.168.100.1'
         badIP = '192.168.10.126'
-        plug = ShellyPlug( badIP )
+        plug = ShellyPlug(badIP)
         ok, errmsg, jdata = plug.turn_on()
-        s.assertFalse( ok, errmsg )
-
+        s.assertFalse(ok, errmsg)
         return
 
-    def test_gen1api( s ) -> None:
+    def test_gen1api(s) -> None:
+        '''
+        Test Gen1 API support
+        '''
+        log.info('test_gen1api')
 
-        ip = '192.168.10.190'
-        plug = ShellyPlug( ip )
+        plug = ShellyPlug(s.ip)
 
         # https://shelly-api-docs.shelly.cloud/gen1/#shelly
+        log.info('test_gen1api /shelly')
         ok, errmsg, jdata = plug.get('/shelly')
-        s.assertTrue( ok, errmsg )
+        s.assertTrue(ok, errmsg)
+        assert jdata
 
         # these are the fields I find in my gen2 device
-        expected_fields = (
+        expected_fields1 = (
             'name', 'id', 'mac', 'model', 'gen', 'fw_id', 'ver', 'app',
             'auth_en', 'auth_domain')
-        for f in expected_fields:
-            s.assertIn( f, jdata )
+        for f in expected_fields1:
+            s.assertIn(f, jdata)
 
         # https://shelly-api-docs.shelly.cloud/gen1/#shelly-plug-plugs-relay-0
+        log.info('test_gen1api /relay/0')
         ok, errmsg, jdata = plug.get('/relay/0')
-        s.assertTrue( ok, errmsg )
-        expected_fields = (
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        expected_fields2 = (
             'ison', 'has_timer', 'timer_started_at', 'timer_duration',
             'timer_remaining', 'overpower', 'source')
-        for f in expected_fields:
-            s.assertIn( f, jdata )
+        for f in expected_fields2:
+            s.assertIn(f, jdata)
 
         if jdata['ison']:
             ok, errmsg, jdata = plug.turn_off()
-            s.assertTrue( ok, errmsg )
-
+            s.assertTrue(ok, errmsg)
 
         ok, errmsg, jdata = plug.turn_on()
-        s.assertTrue( ok, errmsg )
-        for f in expected_fields:
-            s.assertIn( f, jdata )
-        s.assertTrue( jdata['ison'] )
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        for f in expected_fields2:
+            s.assertIn(f, jdata)
+        s.assertTrue(jdata['ison'])
 
         ok, errmsg, jdata = plug.turn_off()
-        s.assertTrue( ok, errmsg )
-        for f in expected_fields:
-            s.assertIn( f, jdata )
-        s.assertFalse( jdata['ison'] )
-
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        for f in expected_fields2:
+            s.assertIn(f, jdata)
+        s.assertFalse(jdata['ison'])
 
         ok, errmsg, jdata = plug.is_on()
-        s.assertTrue( ok, errmsg )
+        s.assertTrue(ok, errmsg)
+        assert jdata
         was_on = jdata['ison']
 
         ok, errmsg, jdata = plug.turn_toggle()
-        s.assertTrue( ok, errmsg )
-        for f in expected_fields:
-            s.assertIn( f, jdata )
-        s.assertTrue( jdata['ison'] )
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        for f in expected_fields2:
+            s.assertIn(f, jdata)
+        s.assertTrue(jdata['ison'])
         is_on = jdata['ison']
-        s.assertNotEqual( was_on, is_on )
-
+        s.assertNotEqual(was_on, is_on)
 
         # https://shelly-api-docs.shelly.cloud/gen1/#shelly-plug-plugs-meter-0
+        log.info('test_gen1api /meter/0')
         ok, errmsg, jdata = plug.get('/meter/0')
-        s.assertFalse( ok, errmsg )
-
+        s.assertFalse(ok, errmsg)
         return
 
-    def test_gen2api( s ) -> None:
+    def test_gen2api(s) -> None:
+        '''
+        Test Gen2 API support
+        '''
+        log.info('test_gen2api')
 
-        ip = '192.168.10.190'
-        plug = ShellyPlug( ip )
+        plug = ShellyPlug(s.ip)
 
         # https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonServices/Shelly#shellygetstatus
-        ok, errmsg, jdata = plug.rpc( 'Shelly.GetStatus' )
-        s.assertTrue( ok, errmsg )
+        log.info('test_gen2api Shelly.GetStatus')
+        ok, errmsg, jdata = plug.rpc('Shelly.GetStatus')
+        s.assertTrue(ok, errmsg)
+        assert jdata
         expected_fields = ('id', 'src', 'dst', 'result')
         for f in expected_fields:
-            s.assertIn( f, jdata )
+            s.assertIn(f, jdata)
         result = jdata['result']
 
         ok, errmsg, jdata = plug.get_status()
-        s.assertTrue( ok, errmsg )
-        s.assertEqual( len(result), len(jdata) )
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        log.info('plug.get_status() => %s', json.dumps(jdata, indent=4))
+        s.assertEqual(len(result), len(jdata))
 
-        expected_fields = ( 'ble', 'cloud', 'mqtt', 'switch:0', 'sys', 'wifi')
+        expected_fields = ('ble', 'cloud', 'mqtt', 'switch:0', 'sys', 'wifi')
         for f in expected_fields:
-            s.assertIn( f, jdata )
+            s.assertIn(f, jdata)
 
-        data = result[ 'switch:0' ]
-        expected_fields = ( 'id', 'source', 'output', 'apower', 'voltage',
+        data = result['switch:0']
+        expected_fields = (
+            'id', 'source', 'output', 'apower', 'voltage',
             'current', 'aenergy', 'temperature')
         for f in expected_fields:
-            s.assertIn( f, data )
+            s.assertIn(f, data)
 
         ok, errmsg, jdata = plug.get_config()
-        s.assertTrue( ok, errmsg )
-        expected_fields = ( 'ble', 'cloud', 'mqtt', 'switch:0', 'sys', 'wifi')
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        log.info('plug.get_config() => %s', json.dumps(jdata, indent=4))
+
+        expected_fields = ('ble', 'cloud', 'mqtt', 'switch:0', 'sys', 'wifi')
         for f in expected_fields:
-            s.assertIn( f, jdata )
+            s.assertIn(f, jdata)
 
         ok, errmsg, jdata = plug.get_device_info()
-        s.assertTrue( ok, errmsg )
-        expected_fields = ( 'name', 'id', 'mac', 'model', 'gen', 'fw_id', 'ver',
-            'app', 'auth_en', 'auth_domain' )
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        log.info('plug.get_device_info() => %s', json.dumps(jdata, indent=4))
+
+        expected_fields = (
+            'name', 'id', 'mac', 'model', 'gen', 'fw_id', 'ver',
+            'app', 'auth_en', 'auth_domain')
         for f in expected_fields:
-            s.assertIn( f, jdata )
+            s.assertIn(f, jdata)
 
         ok, errmsg, jdata = plug.list_methods()
-        s.assertTrue( ok, errmsg )
-        s.assertIn( 'methods', jdata )
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        log.info('plug.list_methods() => %s', json.dumps(jdata, indent=4))
+        s.assertIn('methods', jdata)
 
         ok, errmsg, jdata = plug.get_input_config()
-        #s.assertTrue( ok, errmsg )
-        #ok, errmsg, jdata = plug.get('/rpc/Input.GetConfig', {'id':0})
-        #s.assertTrue( ok, errmsg )
+        log.info('plug.get_input_config() => %s, %s, %s', ok, errmsg, jdata)
+        # s.assertTrue(ok, errmsg)
+        # ok, errmsg, jdata = plug.get('/rpc/Input.GetConfig', {'id':0})
+        # s.assertTrue(ok, errmsg)
 
         ok, errmsg, jdata = plug.get_input_status()
+        log.info('plug.get_input_status() => %s, %s, %s', ok, errmsg, jdata)
 
         ok, errmsg, jdata = plug.get_switch_config()
-        s.assertTrue( ok, errmsg )
-        expected_fields = ('id', 'name', 'initial_state', 'auto_on',
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        log.info('plug.get_switch_config() => %s', json.dumps(jdata, indent=4))
+
+        expected_fields = (
+            'id', 'name', 'initial_state', 'auto_on',
             'auto_on_delay', 'auto_off', 'auto_off_delay', 'power_limit',
-            'voltage_limit', 'current_limit' )
+            'voltage_limit', 'current_limit')
         for f in expected_fields:
-            s.assertIn( f, jdata )
+            s.assertIn(f, jdata)
 
         ok, errmsg, jdata = plug.get_switch_status()
-        s.assertTrue( ok, errmsg )
-        expected_fields = ( 'id', 'source', 'output', 'apower', 'voltage',
-        'current', 'aenergy', 'temperature' )
+        s.assertTrue(ok, errmsg)
+        assert jdata
+        log.info('plug.get_switch_status() => %s', json.dumps(jdata, indent=4))
+
+        expected_fields = (
+            'id', 'source', 'output', 'apower', 'voltage',
+            'current', 'aenergy', 'temperature')
         for f in expected_fields:
-            s.assertIn( f, jdata )
+            s.assertIn(f, jdata)
         return
