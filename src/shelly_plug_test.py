@@ -5,7 +5,7 @@ import json
 # from typing import List
 import unittest
 
-from shelly_plug import ShellyPlug
+from shelly import ShellyPlug
 from logger import log
 
 
@@ -21,7 +21,7 @@ class ShellyPlug_test(unittest.TestCase):
     '''
 
     # IP Address of your shelly plug
-    ip = '192.168.10.190'
+    ip = '192.168.11.86'
 
     def test_nonexistent_plug(s) -> None:
         '''
@@ -29,7 +29,6 @@ class ShellyPlug_test(unittest.TestCase):
         '''
         log.info('test_nonexistent_plug')
 
-        badIP = '192.168.100.1'
         badIP = '192.168.10.126'
         plug = ShellyPlug(badIP)
         ok, errmsg, jdata = plug.turn_on()
@@ -47,15 +46,36 @@ class ShellyPlug_test(unittest.TestCase):
         # https://shelly-api-docs.shelly.cloud/gen1/#shelly
         log.info('test_gen1api /shelly')
         ok, errmsg, jdata = plug.get('/shelly')
+        log.info('get(/shelly)=> %s', json.dumps(jdata, indent=4))
+        # {
+        #     "name": null,
+        #     "id": "shellyplugus-083af2005bf0",
+        #     "mac": "083AF2005BF0",
+        #     "slot": 1,
+        #     "model": "SNPL-00116US",
+        #     "gen": 2,
+        #     "fw_id": "20231219-133953/1.1.0-g34b5d4f",
+        #     "ver": "1.1.0",
+        #     "app": "PlugUS",
+        #     "auth_en": false,
+        #     "auth_domain": null
+        # }
         s.assertTrue(ok, errmsg)
         assert jdata
-
         # these are the fields I find in my gen2 device
         expected_fields1 = (
             'name', 'id', 'mac', 'model', 'gen', 'fw_id', 'ver', 'app',
             'auth_en', 'auth_domain')
         for f in expected_fields1:
             s.assertIn(f, jdata)
+
+        log.info('test_gen1api /settings')
+        ok, errmsg, jdata = plug.get('/settings')
+        s.assertFalse(ok, errmsg)
+
+        log.info('test_gen1api /status')
+        ok, errmsg, jdata = plug.get('/status')
+        s.assertFalse(ok, errmsg)
 
         # https://shelly-api-docs.shelly.cloud/gen1/#shelly-plug-plugs-relay-0
         log.info('test_gen1api /relay/0')

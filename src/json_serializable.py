@@ -2,7 +2,7 @@
 #
 #
 import json
-import pickle
+# import pickle
 from typing import Any, TextIO
 
 
@@ -70,7 +70,7 @@ class JsonSerializable:
         if data.get('class_name', '') != s.class_name:
             return False
 
-        for k,v in data.items():
+        for k, v in data.items():
             s.__setattr__(k, v)
         return True
 

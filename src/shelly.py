@@ -27,16 +27,281 @@ JSON = Mapping[str, AnyJSON]
 # CompositeJSON = Union[JSON, Sequence[AnyJSON]]
 
 
-class ShellyPlug:
+class ShellyDevice:
     '''
-    Commands for (US) Shelly Plug
+    Common Parent for shelly devices
     '''
-
     def __init__(s, ip: str) -> None:
-
         s.host = ip
         # TODO: validate ip?
         return
+
+    def get(s, uri: str, params: Dict[str, str] = {}) -> Tuple[
+            bool, Optional[str], Optional[JSON]]:
+        '''
+        Issue HTTP GET to the plug's IP.
+        Returns ok, errmsg, jdata
+        '''
+
+        assert isinstance(uri, str)
+        url = f'http://{s.host}{uri}'
+        errmsg = ''
+        try:
+            r = requests.get(url, params=params)
+            if params:
+                log.info('HTTP GET %s?%s => %s', url, params, r.status_code)
+            else:
+                log.info('HTTP GET %s => %s', url, r.status_code)
+            if r.ok:
+                jdata = r.json()
+                log.info('r.json() => %s', jdata)
+
+                return True, None, jdata
+
+            errmsg = str(r)
+
+        except ValueError as err:
+            # failed to parse the response JSON
+            errmsg = str(err)
+
+        except RequestException as err:
+            log.info('HTTP GET %s?%s =>\n%s', url, params, err)
+            for arg in err.args:
+                log.info('err.arg:\n%s', arg)
+            # log.info('err.errno %s', err.errno)
+            # log.info('err.filename %s', err.filename)
+            # log.info('err.filename2 %s', err.filename2)
+            # log.info('err.response %s', err.response)
+            # log.info('err.strerror %s', err.strerror)
+
+            errmsg = str(err)
+
+        return False, errmsg, None
+
+
+class ShellyBulb(ShellyDevice):
+    '''
+    Commands for Shelly Bulb
+    '''
+
+    def get_settings(s) -> Tuple[bool, Optional[str], Optional[JSON]]:
+        '''
+        gen1 API https://shelly-api-docs.shelly.cloud/gen1/#settings
+        get(/settings) => {
+            "device": {
+                "type": "SHBDUO-1",
+                "mac": "98F4ABD12B55",
+                "hostname": "ShellyBulbDuo-D12B55",
+                "num_outputs": 1
+            },
+            "wifi_ap": {
+                "enabled": false,
+                "ssid": "ShellyBulbDuo-D12B55",
+                "key": ""
+            },
+            "wifi_sta": {
+                "enabled": true,
+                "ssid": "C8LINA",
+                "ipv4_method": "dhcp",
+                "ip": null,
+                "gw": null,
+                "mask": null,
+                "dns": null
+            },
+            "wifi_sta1": {
+                "enabled": false,
+                "ssid": null,
+                "ipv4_method": "dhcp",
+                "ip": null,
+                "gw": null,
+                "mask": null,
+                "dns": null
+            },
+            "mqtt": {
+                "enable": false,
+                "server": "192.168.33.3:1883",
+                "user": "",
+                "id": "ShellyBulbDuo-D12B55",
+                "reconnect_timeout_max": 60.0,
+                "reconnect_timeout_min": 2.0,
+                "clean_session": true,
+                "keep_alive": 60,
+                "max_qos": 0,
+                "retain": false,
+                "update_period": 30
+            },
+            "sntp": {
+                "server": "time.google.com"
+            },
+            "login": {
+                "enabled": false,
+                "unprotected": false,
+                "username": "admin",
+                "password": "admin"
+            },
+            "pin_code": "",
+            "name": "",
+            "fw": "20191216-140245/???",
+            "build_info": {
+                "build_id": "20191216-140245/???",
+                "build_timestamp": "2019-12-16T14:02:45Z",
+                "build_version": "1.0"
+            },
+            "cloud": {
+                "enabled": false,
+                "connected": false
+            },
+            "timezone": "America/Los_Angeles",
+            "lat": 37.317699,
+            "lng": -121.938004,
+            "tzautodetect": true,
+            "tz_utc_offset": -28800,
+            "tz_dst": false,
+            "tz_dst_auto": true,
+            "time": "18:21",
+            "hwinfo": {
+                "hw_revision": "prod-2019-12",
+                "batch_id": 0
+            },
+            "mode": "white",
+            "transition": 1000,
+            "lights": [
+                {
+                    "ison": true,
+                    "brightness": 100,
+                    "white": 0,
+                    "temp": 2700,
+                    "default_state": "on",
+                    "auto_on": 0.0,
+                    "auto_off": 0.0,
+                    "schedule": false,
+                    "schedule_rules": []
+                }
+            ],
+            "night_mode": {
+                "enabled": 0,
+                "start_time": "00:00",
+                "end_time": "00:00",
+                "brightness": 0
+            }
+        }
+        '''
+        ok, errmsg, jdata = s.get('/settings')
+        return ok, errmsg, jdata
+
+    def get_status(s) -> Tuple[bool, Optional[str], Optional[JSON]]:
+        '''
+        gen1 API https://shelly-api-docs.shelly.cloud/gen1/#status
+        get(/status) => {
+           "wifi_sta": {
+               "connected": true,
+               "ssid": "SSID",
+               "ip": "192.168.11.88",
+               "rssi": -59
+           },
+           "cloud": {
+               "enabled": false,
+               "connected": false
+           },
+           "mqtt": {
+               "connected": false
+           },
+           "time": "18:21",
+           "serial": 1,
+           "has_update": false,
+           "mac": "98F4ABD12B55",
+           "lights": [
+               {
+                   "ison": true,
+                   "brightness": 100,
+                   "white": 0,
+                   "temp": 2700
+               }
+           ],
+           "meters": [
+               {
+                   "power": 9.0,
+                   "is_valid": "true"
+               }
+           ],
+           "update": {
+               "status": "unknown",
+               "has_update": false,
+               "new_version": "",
+               "old_version": "20191216-140245/???"
+           },
+           "ram_total": 50664,
+           "ram_free": 40248,
+           "fs_size": 233681,
+           "fs_free": 171433,
+           "uptime": 18
+        }
+        '''
+        ok, errmsg, jdata = s.get('/status')
+        return ok, errmsg, jdata
+
+    def is_on(s) -> Tuple[
+            bool, Optional[str], Optional[JSON]]:
+        '''
+        Get bulb status
+        https://shelly-api-docs.shelly.cloud/gen1/#shelly-duo-light-0
+        Returns ok, errmsg, jdata
+        get(/light/0)=> {
+            "ison": true,
+            "brightness": 100,
+            "white": 0,
+            "temp": 2700
+        }
+        '''
+        return s.get('/light/0')
+
+    def turn_on(s, transition: int = -1, duration: int = -1 ) -> Tuple[
+            bool, Optional[str], Optional[JSON]]:
+        '''
+        https://shelly-api-docs.shelly.cloud/gen1/#shelly-duo-light-0
+        transition: One-shot transition, 0..5000 [ms]
+        duration:   Automatic flip-back timer in seconds
+        '''
+        uri = '/light/0/?turn=on'
+        if transition >= 0:
+            uri += f'&transition={transition}'
+        if duration >= 0:
+            uri += f'&timer={duration}'
+        return s.get(uri)
+
+    def turn_off(s, transition: int = -1, duration: int = -1 ) -> Tuple[
+            bool, Optional[str], Optional[JSON]]:
+        '''
+        https://shelly-api-docs.shelly.cloud/gen1/#shelly-duo-light-0
+        transition: One-shot transition, 0..5000 [ms]
+        duration:   Automatic flip-back timer in seconds
+        '''
+        uri = '/light/0/?turn=off'
+        if transition >= 0:
+            uri += f'&transition={transition}'
+        if duration >= 0:
+            uri += f'&timer={duration}'
+        return s.get(uri)
+
+    def turn_toggle(s, transition: int = -1, duration: int = -1) -> Tuple[
+            bool, Optional[str], Optional[JSON]]:
+        '''
+        https://shelly-api-docs.shelly.cloud/gen1/#shelly-duo-light-0
+        transition: One-shot transition, 0..5000 [ms]
+        duration:   Automatic flip-back timer in seconds
+        '''
+        uri = '/light/0/?turn=toggle'
+        if transition >= 0:
+            uri += f'&transition={transition}'
+        if duration >= 0:
+            uri += f'&timer={duration}'
+        return s.get(uri)
+
+
+class ShellyPlug(ShellyDevice):
+    '''
+    Commands for (US) Shelly Plug
+    '''
 
     def turn_on(s, duration: int = 0) -> Tuple[
             bool, Optional[str], Optional[JSON]]:
@@ -84,48 +349,6 @@ class ShellyPlug:
         '''
         # https://shelly-api-docs.shelly.cloud/gen1/#shelly-plug-plugs-relay-0
         return s.get('/relay/0')
-
-    def get(s, uri: str, params: Dict[str, str] = {}) -> Tuple[
-            bool, Optional[str], Optional[JSON]]:
-        '''
-        Issue HTTP GET to the plug's IP.
-        Returns ok, errmsg, jdata
-        '''
-
-        assert isinstance(uri, str)
-        url = f'http://{s.host}{uri}'
-        errmsg = ''
-        try:
-            r = requests.get(url, params=params)
-            if params:
-                log.info('HTTP GET %s?%s => %s', url, params, r.status_code)
-            else:
-                log.info('HTTP GET %s => %s', url, r.status_code)
-            if r.ok:
-                jdata = r.json()
-                log.info('r.json() => %s', jdata)
-
-                return True, None, jdata
-
-            errmsg = str(r)
-
-        except ValueError as err:
-            # failed to parse the response JSON
-            errmsg = str(err)
-
-        except RequestException as err:
-            log.info('HTTP GET %s?%s =>\n%s', url, params, err)
-            for arg in err.args:
-                log.info('err.arg:\n%s', arg)
-            # log.info('err.errno %s', err.errno)
-            # log.info('err.filename %s', err.filename)
-            # log.info('err.filename2 %s', err.filename2)
-            # log.info('err.response %s', err.response)
-            # log.info('err.strerror %s', err.strerror)
-
-            errmsg = str(err)
-
-        return False, errmsg, None
 
     def rpc(s, method: str, params: Dict[str, Any] = {}) -> Tuple[
             bool, Optional[str], Optional[JSON]]:
@@ -188,6 +411,8 @@ class ShellyPlug:
     def get_status(s) -> Tuple[
             bool, Optional[str], Optional[JSON]]:
         '''
+        gen2 API
+
         https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonServices/Shelly#shellygetstatus
         {
             "ble": {},
@@ -458,7 +683,7 @@ class ShellyPlug:
             jdata = jdata['result']
         return ok, errmsg, jdata
 
-    def get_input_config(s, id:int=0) -> Tuple[
+    def get_input_config(s, id: int = 0) -> Tuple[
             bool, Optional[str], Optional[JSON]]:
         '''
         https://shelly-api-docs.shelly.cloud/gen2/Components/FunctionalComponents/Input
